@@ -219,7 +219,7 @@
    <tr v-if="result.error"><td class="red" colspan="2">ERROR: {{ result.error }}</td></tr>
    <tr v-for="(value, key) in result.results">
     <td>{{ key }}</td>
-    <td><label>{{ value }}</label></td>
+    <td><label><a href="javascript:void(0)" @click="showCheckResults(key)">{{ value }}</a></label></td>
    </tr>
 
   </tbody>
@@ -316,6 +316,15 @@
   </div>
  </g-modal>
 </div>
+</template>
+
+
+<template id="template-results">
+   <div>
+    <h2>Results - {{metric}}</h2>
+    <button class="button" @click="goBack()">Go back</button>
+    <p ref="graph"></p>
+   </div>
 </template>
 
 <template id="template-contacts">

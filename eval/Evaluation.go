@@ -20,7 +20,7 @@ type (
 		Start       time.Time            `json:"start"`
 		End         time.Time            `json:"end"`
 		Hosts       map[string]State     `json:"hosts"`
-		Results     []checks.CheckResult `json:"-"`
+		Results     []checks.CheckResult `json:"results"`
 	}
 )
 

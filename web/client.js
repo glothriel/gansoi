@@ -4,6 +4,7 @@ var agents = new g.Collection('name');
 var notifiers = new g.Collection('name');
 var evaluations = new g.Collection('id');
 var lastEvaluations = new g.Collection('check_id');
+var results = new g.Collection('check_id');
 var checkresults = new g.Collection('check_host_id');
 var contacts = new g.Collection('id');
 var contactgroups = new g.Collection('id');
@@ -262,6 +263,46 @@ var settings = Vue.component('settings', {
     template: '#template-settings'
 });
 
+
+var checkResults = Vue.component('results', {
+
+    data: function() {
+
+        this.$http.get('/results?CheckID=' + this.$route.params.id).then(function(response) {
+           
+            var items = [];
+              for(var i=0 ; i < response.body.length ; i++) {
+                  var elem = response.body[i];
+                  if( elem.results[this.$route.params.metric]){
+                    items.push({x: elem.timestamp, y: elem.results[this.$route.params.metric]})
+                  }
+              }
+            
+              var dataset = new vis.DataSet(items);
+              var options = {
+                // start: '2014-06-10',
+                // end: '2014-06-18'
+                drawPoints: {size: 1}
+              };
+              var graph2d = new vis.Graph2d(this.$refs.graph, dataset, options);
+           
+
+        });
+        return {
+            metric: this.$route.params.metric,
+            check_id: this.$route.params.id
+        };
+    },
+
+    methods: {
+        goBack: function() {
+            router.push('/check/view/' + this.$route.params.id);
+        },
+    },
+
+    template: '#template-results'
+});
+
 var gansoi = Vue.component('gansoi', {
     data: function() {
         return {
@@ -495,6 +536,11 @@ var viewCheck = Vue.component('view-check', {
     },
 
     methods: {
+
+        showCheckResults: function(metric) {
+            router.push('/check/results/' + this.$route.params.id + "/" + metric);
+        },
+
         editCheck: function(button) {
             router.push('/check/edit/' + this.$route.params.id);
         },
@@ -943,6 +989,7 @@ const router = new VueRouter({
         { path: '/checks', component: listChecks },
         { path: '/check/view/:id', component: viewCheck },
         { path: '/check/edit/:id', component: editCheck },
+        { path: '/check/results/:id/:metric', component: checkResults },
 
         { path: '/contacts', component: listContacts },
         { path: '/contact/view/:id', component: viewContact },
@@ -951,6 +998,8 @@ const router = new VueRouter({
         { path: '/contactgroups', component: listContactgroups },
         { path: '/contactgroup/view/:id', component: viewContactgroup },
         { path: '/contactgroup/edit/:id', component: editContactgroup },
+
+        
 
         { path: '', redirect: '/gansoi' }
     ]

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -523,6 +524,18 @@ func runCore(_ *cobra.Command, _ []string) {
 		publicKey := ssh.PublicKey()
 
 		c.Data(http.StatusOK, "text/plain", []byte(publicKey))
+	})
+
+	engine.GET("/results", func(c *gin.Context) {
+		cr := &[]checks.CheckResult{}
+		v, ok := c.Request.URL.Query()["CheckID"]
+		if ok {
+			db.Find("CheckID", v[0], cr, -1, 0, false)
+			c.JSON(http.StatusOK, cr)
+		} else {
+			c.AbortWithError(http.StatusBadRequest, errors.New("CheckID is obligatory"))
+		}
+
 	})
 
 	notifier, err := notify.NewNotifier(n)

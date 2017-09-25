@@ -1,6 +1,7 @@
 package node
 
 import (
+	"fmt"
 	"net/http"
 	"reflect"
 
@@ -38,7 +39,7 @@ func (r *RestAPI) list(c *gin.Context) {
 	// Reflect is so beautiful. This will create a pointer to a slice of typ's.
 	// Please see: http://stackoverflow.com/a/25386460/1156537
 	list := reflect.New(reflect.MakeSlice(reflect.SliceOf(r.typ), 0, 0).Type()).Interface()
-
+	fmt.Println(reflect.TypeOf(list))
 	err := r.db.All(list, -1, 0, false)
 	if err != nil {
 		reply(c, http.StatusInternalServerError, err.Error())
