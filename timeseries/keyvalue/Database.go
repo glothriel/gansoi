@@ -1,12 +1,23 @@
-package boltdb
+package keyvalue
 
 import (
 	"github.com/gansoi/gansoi/timeseries"
 )
 
 type Database struct {
-	storage KeyValueStorage
-	factory ItemCollectionFactory
+	storage  KeyValueStorage
+	factory  ItemCollectionFactory
+	reporter timeseries.Reporter
+}
+
+func NewDatabase(storage KeyValueStorage, factory ItemCollectionFactory) *Database {
+	return &Database{
+		storage: storage,
+		factory: factory,
+		reporter: &Reporter{
+			iteratorFactory: &GorillaIteratorFactory{},
+		},
+	}
 }
 
 func (d *Database) Store(host, name string, metric timeseries.Metric) {
@@ -24,5 +35,5 @@ func (d *Database) Reporter() timeseries.Reporter {
 }
 
 func getKey(host, metricName string) string {
-	return host + "|" + metricName
+	return host + "::" + metricName
 }

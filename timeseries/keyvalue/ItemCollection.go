@@ -1,4 +1,4 @@
-package boltdb
+package keyvalue
 
 import "github.com/gansoi/gansoi/timeseries"
 import (
@@ -23,7 +23,8 @@ type GorillaItemCollectionFactory struct {
 func (f *GorillaItemCollectionFactory) InitializeWith(m timeseries.Metric) ItemCollection {
 	return tsz.New(m.Timestamp)
 }
+
 func (f *GorillaItemCollectionFactory) FromBytes(data []byte) (ItemCollection, error) {
-	collection := tsz.Series{}
+	collection := &tsz.Series{}
 	return collection, collection.UnmarshalBinary(data)
 }

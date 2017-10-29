@@ -6,6 +6,8 @@ import (
 
 	"github.com/gansoi/gansoi/database"
 	"github.com/gansoi/gansoi/logger"
+	"github.com/gansoi/gansoi/timeseries"
+	"github.com/gansoi/gansoi/timeseries/keyvalue"
 	"github.com/gansoi/gansoi/transports"
 	"github.com/gansoi/gansoi/transports/ssh"
 )
@@ -19,6 +21,7 @@ type (
 		stop     chan struct{}
 		db       database.ReadWriter
 		store    *MetaStore
+		tsdb     timeseries.Database
 	}
 )
 
@@ -32,13 +35,17 @@ var (
 // NewScheduler instantiates a new scheduler.
 func NewScheduler(db database.ReadWriteBroadcaster, nodeName string) *Scheduler {
 	store, _ := newMetaStore(db)
-
+	inGorillaFormat := &keyvalue.GorillaItemCollectionFactory{}
 	s := &Scheduler{
 		Results:  make(chan *CheckResult, 1000),
 		nodeName: nodeName,
 		stop:     make(chan struct{}),
 		db:       db,
 		store:    store,
+		tsdb: keyvalue.NewDatabase(
+			keyvalue.NewInMemStorage(inGorillaFormat),
+			inGorillaFormat,
+		),
 	}
 
 	return s
@@ -99,6 +106,20 @@ func (s *Scheduler) runCheck(clock time.Time, meta *checkMeta) *CheckResult {
 	inflight.Add(-1)
 
 	checkResult.Node = s.nodeName
+
+	for key, value := range checkResult.Results {
+		v, ok := value.(float64)
+		if ok {
+			s.tsdb.Store(
+				checkResult.HostID,
+				key,
+				timeseries.Metric{
+					Timestamp: uint32(checkResult.TimeStamp.Unix()),
+					Value:     v,
+				},
+			)
+		}
+	}
 
 	if checkResult.Error != "" {
 		failed.Add(1)
